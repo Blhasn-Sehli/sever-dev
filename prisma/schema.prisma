@@ -1,0 +1,139 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           Int            @id @default(autoincrement())
+  firstName    String
+  lastName     String
+  profileImage String         @default("https://st3.depositphotos.com/6672868/13701/v/450/depositphotos_137014128-stock-illustration-user-profile-icon.jpg")
+  coverImage   String         @default("https://st3.depositphotos.com/6672868/13701/v/450/depositphotos_137014128-stock-illustration-user-profile-icon.jpg")
+  email        String         @unique
+  password     String
+  dateOfBirth  String
+  type         Type
+  followers    Int            @default(0)
+  post         Post[]
+  chatroom     userChatRoom[]
+  messages     Message[]
+  comments     Comment[]
+  products     Product[]
+  wishList     Wishlist?
+  cart         Cart?
+}
+
+enum Type {
+  regular
+  brand
+  fashionista
+}
+
+model userChatRoom {
+  id         Int      @id @default(autoincrement())
+  user       User     @relation(fields: [userId], references: [id])
+  userId     Int
+  chatRoom   ChatRoom @relation(fields: [chatRoomId], references: [id])
+  chatRoomId Int
+  @@unique([userId, chatRoomId])
+}
+
+model ChatRoom {
+  id           Int            @id @default(autoincrement())
+  name         String?
+  userChatRoom userChatRoom[]
+  messages     Message[]
+}
+
+model Message {
+  id         Int       @id @default(autoincrement())
+  content    String
+  ChatRoom   ChatRoom? @relation(fields: [chatRoomId], references: [id])
+  chatRoomId Int?
+  User       User?     @relation(fields: [sender], references: [id])
+  sender     Int?
+}
+
+model Post {
+  id        Int       @id @default(autoincrement())
+  User      User      @relation(fields: [userId], references: [id])
+  image     String?
+  content   String?
+  numLikes  Int
+  numShares Int
+  userId    Int
+  comments  Comment[]
+}
+
+model Comment {
+  id        Int     @id @default(autoincrement())
+  content   String?
+  Post      Post?   @relation(fields: [postId], references: [id])
+  postId    Int?
+  User      User?   @relation(fields: [commenter], references: [id])
+  commenter Int?
+}
+
+model Category {
+  id       Int           @id @default(autoincrement())
+  type     CategoryTypes
+  products Product[]
+}
+
+enum CategoryTypes {
+  men
+  women
+  child
+}
+
+model Product {
+  id         Int       @id @default(autoincrement())
+  name       String?
+  price      Int
+  quantity   Int
+  image      String?
+  status     Status
+  type       ProdType
+  isWished   Boolean   @default(false)
+  Category   Category? @relation(fields: [categoryId], references: [id])
+  categoryId Int?
+  User       User?     @relation(fields: [userId], references: [id])
+  userId     Int?
+  Wishlist   Wishlist? @relation(fields: [wishlistId], references: [id])
+  wishlistId Int?
+  Cart       Cart?     @relation(fields: [cartId], references: [id])
+  cartId     Int?
+}
+
+enum Status {
+  OnStock
+  OutOfStock
+  OnSale
+  Soon
+}
+
+enum ProdType {
+  Normal
+  NFT
+}
+
+model Wishlist {
+  id       Int       @id @default(autoincrement())
+  products Product[]
+  User     User?     @relation(fields: [userId], references: [id])
+  userId   Int       @unique
+}
+
+model Cart {
+  id       Int       @id @default(autoincrement())
+  products Product[]
+  User     User?     @relation(fields: [userId], references: [id])
+  userId   Int       @unique
+}
